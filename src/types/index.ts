@@ -23,6 +23,8 @@ export interface MainContextProps {
   oscillatorSettings: OscillatorSettings;
   filterSettings: FilterSettings;
   handleIsPlaying: (val: boolean) => void;
+  playOscillator: (frequency: number) => void;
+  killOscillator: (frequenct: number) => void;
   handleOscillatorFrequency: (frequency: number) => void;
   handleOscillatorSettings: (e: ChangeEvent<HTMLInputElement>) => void;
   handleOscillatorType: (e: ChangeEvent<HTMLSelectElement>) => void;

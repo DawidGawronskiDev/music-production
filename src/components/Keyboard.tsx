@@ -6,14 +6,15 @@ const getFrequency = (noteIndex: number, octave: number) => {
 };
 
 export const Keyboard = () => {
+  const [pressedKeys, setPressedKeys] = useState<string[]>([]);
+  console.log(pressedKeys);
   const [currentOctave, setCurrentOctave] = useState(4);
 
-  const { handleOscillatorFrequency } = useContext(MainContext);
+  const { playOscillator, killOscillator } = useContext(MainContext);
 
   const handleClick = (noteIndex: number, octave: number) => {
-    console.log(getFrequency(noteIndex, octave));
     const oscillatorFrequency = getFrequency(noteIndex, octave);
-    handleOscillatorFrequency(oscillatorFrequency);
+    playOscillator(oscillatorFrequency);
   };
 
   const handleCurrentOctave = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -22,10 +23,11 @@ export const Keyboard = () => {
   };
 
   useEffect(() => {
-    const eventListener = (e: KeyboardEvent) => {
-      console.log(currentOctave);
-      let noteIndex: number = 1;
+    const onKeyDown = (e: KeyboardEvent) => {
+      let noteIndex;
       const { key } = e;
+      if (pressedKeys.find((pressedKey) => pressedKey === key)) return;
+      setPressedKeys((prev) => [...prev, key]);
       switch (key) {
         case "q":
           noteIndex = 1;
@@ -63,20 +65,80 @@ export const Keyboard = () => {
         case "u":
           noteIndex = 12;
           break;
-        default:
-          noteIndex = 1;
       }
 
-      const oscillatorFrequency = getFrequency(noteIndex, currentOctave);
-      handleOscillatorFrequency(oscillatorFrequency);
+      if (noteIndex) {
+        const oscillatorFrequency = getFrequency(noteIndex, currentOctave);
+        playOscillator(oscillatorFrequency);
+      }
     };
 
-    window.addEventListener("keypress", eventListener);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      window.removeEventListener("keypress", eventListener);
+      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [currentOctave]);
+  }, [currentOctave, pressedKeys]);
+
+  useEffect(() => {
+    const onKeyUp = (e: KeyboardEvent) => {
+      let noteIndex;
+      const { key } = e;
+      const updatedPressedKeys = pressedKeys.filter(
+        (pressedKey) => pressedKey !== key
+      );
+      setPressedKeys(updatedPressedKeys);
+      switch (key) {
+        case "q":
+          noteIndex = 1;
+          break;
+        case "2":
+          noteIndex = 2;
+          break;
+        case "w":
+          noteIndex = 3;
+          break;
+        case "3":
+          noteIndex = 4;
+          break;
+        case "e":
+          noteIndex = 5;
+          break;
+        case "r":
+          noteIndex = 6;
+          break;
+        case "5":
+          noteIndex = 7;
+          break;
+        case "t":
+          noteIndex = 8;
+          break;
+        case "6":
+          noteIndex = 9;
+          break;
+        case "y":
+          noteIndex = 10;
+          break;
+        case "7":
+          noteIndex = 11;
+          break;
+        case "u":
+          noteIndex = 12;
+          break;
+      }
+
+      if (noteIndex) {
+        const oscillatorFrequency = getFrequency(noteIndex, currentOctave);
+        killOscillator(oscillatorFrequency);
+      }
+    };
+
+    window.addEventListener("keyup", onKeyUp);
+
+    return () => {
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [currentOctave, pressedKeys]);
 
   return (
     <div>

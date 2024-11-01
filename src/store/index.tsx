@@ -10,6 +10,7 @@ import {
   type OscillatorId,
   type OscillatorSettings,
 } from "../types";
+import { Oscillator } from "./Oscillator";
 
 const audioContext = new AudioContext();
 const output = audioContext.destination;
@@ -35,11 +36,15 @@ const defaultFilterSettings: FilterSettings = {
   gain: filter.gain.value,
 };
 
+let oscillatorNodes: Oscillator[] = [];
+
 export const MainContext = createContext<MainContextProps>({
   isPlaying: false,
   oscillatorSettings: defaultOscillatorSettings,
   filterSettings: defaultFilterSettings,
   handleIsPlaying: () => {},
+  playOscillator: () => {},
+  killOscillator: () => {},
   handleOscillatorFrequency: () => {},
   handleOscillatorSettings: () => {},
   handleOscillatorType: () => {},
@@ -65,6 +70,33 @@ export const MainContextProvider = ({ children }: { children: ReactNode }) => {
       oscillator.stop();
       setIsPlaying(false);
     }
+  };
+
+  const playOscillator = (frequency: number) => {
+    const newOscillator = new Oscillator({
+      audioContext,
+      type: "sawtooth",
+      frequency,
+      detune: 0,
+      envelope: undefined,
+      connection: audioContext.destination,
+    });
+
+    oscillatorNodes.push(newOscillator);
+  };
+
+  const killOscillator = (frequency: number) => {
+    const updatedNodes: Oscillator[] = [];
+    oscillatorNodes.forEach((node) => {
+      if (
+        Math.round(node.oscillator.frequency.value) === Math.round(frequency)
+      ) {
+        node.stop();
+      } else {
+        updatedNodes.push(node);
+      }
+    });
+    oscillatorNodes = updatedNodes;
   };
 
   const handleOscillatorFrequency = (frequency: number) => {
@@ -112,6 +144,8 @@ export const MainContextProvider = ({ children }: { children: ReactNode }) => {
         oscillatorSettings,
         filterSettings,
         handleIsPlaying,
+        playOscillator,
+        killOscillator,
         handleOscillatorFrequency,
         handleOscillatorSettings,
         handleOscillatorType,
